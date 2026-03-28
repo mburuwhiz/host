@@ -1,0 +1,187 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// NextAuth Schema Models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// SQLite doesn't support enums natively, but Prisma handles them by using String internally
+// We'll keep the Role enum conceptually or just use String. SQLite with Prisma supports string enums conceptually in the client.
+// However, to avoid issues, we can just map it to String, or let Prisma handle it as a check constraint if possible, but simplest is just mapping or keeping enum.
+// Prisma actually does not support enums on SQLite. We must use String.
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String?   @unique
+  emailVerified  DateTime?
+  image          String?
+  passwordHash   String?   // Added for Argon2id credential login
+  role           String    @default("StandardUser")
+  primaryLanguage String?
+  complianceAccepted Boolean @default(false)
+  phone          String?
+
+  accounts       Account[]
+  sessions       Session[]
+  memberships    TeamMember[]
+  tickets        Ticket[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Platform Models
+model Team {
+  id        String       @id @default(cuid())
+  name      String
+  org       String?
+  storageUsed Float      @default(0) // In TB or GB depending on your scale
+  status    String       @default("Active")
+  members   TeamMember[]
+  apps      App[]
+  auditLogs AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TeamMember {
+  id     String   @id @default(cuid())
+  userId String
+  teamId String
+  role   String   @default("Viewer") // Owner, Developer, Viewer
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+}
+
+model App {
+  id            String       @id @default(cuid())
+  name          String
+  teamId        String
+  status        String       @default("building")
+  repoUrl       String?
+  branch        String       @default("main")
+  commit        String?
+  lastDeployed  DateTime?
+  url           String?      // e.g. app-name.twoem.app
+  buildCommand  String?
+  startCommand  String?
+  rootDirectory String       @default("./")
+
+  team          Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  deployments   Deployment[]
+  envVars       EnvVar[]
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model EnvVar {
+  id    String @id @default(cuid())
+  key   String
+  value String // Note: Value should ideally be encrypted before storing in the Vault
+  appId String
+  app   App    @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@unique([appId, key])
+}
+
+model Deployment {
+  id        String   @id @default(cuid())
+  appId     String
+  status    String   // Success, Failed, Building
+  node      String?
+  commit    String?
+  duration  Int?     // In seconds
+  logs      String?
+
+  app       App      @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model Node {
+  id      String @id @default(cuid())
+  type    String // Master, Worker
+  status  String @default("Healthy")
+  cpuLoad Float  @default(0)
+  ramLoad Float  @default(0)
+  storage Float  @default(0) // In TB
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Ticket {
+  id       String   @id // T-{RANDOM_8_HEX}
+  userId   String
+  subject  String
+  status   String   @default("Open")
+  priority String   @default("Low")
+  messages TicketMessage[]
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  body      String
+  isFromAdmin Boolean @default(false)
+
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  teamId    String
+  action    String
+  details   String?
+  userId    String
+
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}

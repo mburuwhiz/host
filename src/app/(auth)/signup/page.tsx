@@ -10,26 +10,55 @@ import { Label } from "@/components/ui/label"
 import { PeekABooCharacter } from "@/components/auth/peek-a-boo-character"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useRouter } from "next/navigation"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
+import { registerUser } from "@/lib/actions/auth"
+import { signIn } from "next-auth/react"
 
 export default function SignupPage() {
   const { toast } = useToast()
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i)
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setTimeout(() => {
-        toast({
+
+    const formData = new FormData(e.target as HTMLFormElement)
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+
+    try {
+      const res = await registerUser(formData)
+      if (res.error) {
+        toast({ variant: "destructive", title: "Error", description: res.error })
+        setLoading(false)
+        return
+      }
+
+      const loginRes = await signIn("credentials", {
+        email,
+        password,
+        redirect: false
+      })
+
+      if (loginRes?.error) {
+         toast({ variant: "destructive", title: "Error", description: "Failed to login after registration." })
+      } else {
+         toast({
             title: "Account Provisioned",
             description: "Welcome to the TWOEM cluster. Proceeding to onboarding.",
-        })
-        setLoading(false)
-        window.location.href = "/onboarding"
-    }, 1500)
+         })
+         router.push("/onboarding")
+      }
+    } catch(err) {
+      toast({ variant: "destructive", title: "Error", description: "An error occurred." })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -78,12 +107,12 @@ export default function SignupPage() {
                   <Label htmlFor="fullname">Full Name</Label>
                   <div className="relative group">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="fullname" placeholder="Johnathan Doe" className="pl-10" required />
+                    <Input id="fullname" name="fullname" placeholder="Johnathan Doe" className="pl-10" required />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="birthyear">Birth Year</Label>
-                  <Select required>
+                  <Select name="birthyear" required>
                     <SelectTrigger id="birthyear" className="h-10">
                       <SelectValue placeholder="Select Year" />
                     </SelectTrigger>
@@ -98,33 +127,33 @@ export default function SignupPage() {
                   <Label htmlFor="email">Work Email</Label>
                   <div className="relative group">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="email" type="email" placeholder="john@company.com" className="pl-10" required />
+                    <Input id="email" name="email" type="email" placeholder="john@company.com" className="pl-10" required />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
                   <div className="relative group">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="phone" type="tel" placeholder="+254 700 000 000" className="pl-10" />
+                    <Input id="phone" name="phone" type="tel" placeholder="+254 700 000 000" className="pl-10" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="company">Company</Label>
                   <div className="relative group">
                     <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="company" placeholder="Organization name" className="pl-10" />
+                    <Input id="company" name="company" placeholder="Organization name" className="pl-10" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="position">Position</Label>
                   <div className="relative group">
                     <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="position" placeholder="Job title" className="pl-10" />
+                    <Input id="position" name="position" placeholder="Job title" className="pl-10" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="role">Primary Role</Label>
-                  <Select required>
+                  <Select name="role" required>
                     <SelectTrigger>
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
@@ -137,7 +166,7 @@ export default function SignupPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="language">Programming Language</Label>
-                  <Select required>
+                  <Select name="language" required>
                     <SelectTrigger>
                       <SelectValue placeholder="Main language" />
                     </SelectTrigger>
@@ -155,7 +184,7 @@ export default function SignupPage() {
               <div className="pt-4 space-y-4">
                 <div className="grid gap-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" required />
+                  <Input id="password" name="password" type="password" required />
                   <p className="text-[10px] text-muted-foreground">Encryption level: Argon2id (Master Cluster standard).</p>
                 </div>
               </div>

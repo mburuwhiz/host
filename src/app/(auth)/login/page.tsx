@@ -4,6 +4,7 @@
 import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
 import { Github, ShieldAlert, Loader2, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,35 +21,43 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
-    // Simulate authentication logic
-    setTimeout(() => {
-      const isSuperAdmin = email.toLowerCase() === "admin@twoem.com"
-      const isUser = email.toLowerCase() === "test@twoem.com"
-      
-      if (password === "Pass123" && (isSuperAdmin || isUser)) {
-        toast({
-          title: "Access Granted",
-          description: isSuperAdmin ? "Operator terminal engaged." : "Welcome back to the cluster.",
-        })
+    try {
+      const res = await signIn('credentials', {
+        email,
+        password,
+        redirect: false
+      })
 
-        if (isSuperAdmin) {
-          router.push("/admin/dashboard")
-        } else {
-          router.push("/dashboard")
-        }
-      } else {
+      if (res?.error) {
         toast({
           variant: "destructive",
           title: "Authentication Failed",
           description: "Invalid credentials. Please check your signal and try again.",
         })
+      } else {
+        toast({
+          title: "Access Granted",
+          description: "Welcome back to the cluster.",
+        })
+
+        // Let middleware or standard routing handle role-based redirects if desired,
+        // but for now simple redirect:
+        router.push("/dashboard")
+        router.refresh()
       }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred.",
+      })
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
   }
 
   return (
