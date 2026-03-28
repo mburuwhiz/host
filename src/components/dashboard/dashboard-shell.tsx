@@ -99,8 +99,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               You must verify your email address to access the dashboard and deploy applications. Please check your inbox for the verification link.
             </p>
             <div className="pt-4 flex flex-col gap-3">
-              <Button className="w-full font-bold h-11 bg-amber-500 hover:bg-amber-600" onClick={() => {
-                toast({ title: "Email Sent", description: "Verification email resent successfully." })
+              <Button className="w-full font-bold h-11 bg-amber-500 hover:bg-amber-600" onClick={async () => {
+                const res = await fetch("/api/auth/resend-verification", { method: "POST" })
+                if (res.ok) {
+                    toast({ title: "Email Sent", description: "Verification email resent successfully." })
+                } else {
+                    toast({ variant: "destructive", title: "Error", description: "Failed to resend verification email." })
+                }
               }}>Resend Verification Email</Button>
               <Button variant="ghost" onClick={() => signOut({ callbackUrl: '/login', redirect: true })}>Log out</Button>
             </div>
