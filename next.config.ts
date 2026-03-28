@@ -2,6 +2,7 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
+  serverExternalPackages: ["argon2", "@prisma/client", "prisma"],
   typescript: {
     ignoreBuildErrors: true,
   },

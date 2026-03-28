@@ -7,6 +7,7 @@ import * as argon2 from "argon2"
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
+  trustHost: true,
   pages: {
     signIn: '/login',
   },
