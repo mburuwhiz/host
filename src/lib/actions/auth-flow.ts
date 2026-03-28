@@ -15,8 +15,13 @@ export async function requestPasswordReset(email: string) {
         const token = randomBytes(32).toString('hex')
         const expires = new Date(new Date().getTime() + 1 * 60 * 60 * 1000) // 1 hour
 
-        // Ensure we replace any existing token for this email
-        await prisma.passwordResetToken.deleteMany({ where: { email } })
+        // Create token, if one exists, deleting it might fail or pass, it's safer to just let Prisma handle it
+        // or just use Prisma upsert/create correctly if ID is an issue. Since email and token are unique:
+        try {
+            await prisma.passwordResetToken.deleteMany({ where: { email } })
+        } catch (e) {
+            console.log("Could not delete existing tokens, proceeding to create...")
+        }
 
         await prisma.passwordResetToken.create({
             data: {

@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
   try {
     const token = randomBytes(32).toString('hex')
-    const expires = new Date(new Date().getTime() + 24 * 60 * 60 * 1000)
+    const expires = new Date(new Date().getTime() + 1 * 60 * 60 * 1000) // 1 hour expiry
 
     // Create a new verification token first, replacing is safer this way or by unique constraint.
     // However Prisma requires identifier for VerificationToken. Let's delete old ones.

@@ -59,7 +59,7 @@ export const sendSignupSuccessEmail = async (email: string) => {
 
 export const sendVerificationEmail = async (email: string, token: string) => {
   const domain = process.env.AUTH_URL || 'http://localhost:3000';
-  const verificationLink = `${domain}/verify-email?token=${token}`;
+  const verificationLink = `${domain}/login?verifyToken=${token}&email=${encodeURIComponent(email)}`;
 
   return sendEmail(
     email,

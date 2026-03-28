@@ -32,12 +32,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     GoogleProvider({
       clientId: process.env.GOOGLE_ID,
       clientSecret: process.env.GOOGLE_SECRET,
+      allowDangerousEmailAccountLinking: true,
     }),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email", placeholder: "test@twoem.com" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
+        verifyToken: { label: "Verification Token", type: "text" }
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) throw new Error("Missing credentials")
@@ -106,6 +108,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!isPasswordValid) throw new Error("Invalid password")
 
+        // Handle verification token inline during login
+        if (credentials.verifyToken && !user.emailVerified) {
+            const tokenRecord = await prisma.verificationToken.findFirst({
+                where: { identifier: user.email!, token: credentials.verifyToken as string }
+            })
+            if (tokenRecord && new Date() <= tokenRecord.expires) {
+                user = await prisma.user.update({
+                    where: { id: user.id },
+                    data: { emailVerified: new Date() }
+                })
+                await prisma.verificationToken.delete({ where: { identifier_token: { identifier: user.email!, token: credentials.verifyToken as string } } })
+            }
+        }
+
         // Trigger login notification for credentials login
         if (user.email) {
             sendLoginNotificationEmail(user.email).catch(console.error)
@@ -122,9 +138,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     })
   ],
   events: {
-    async signIn({ account }) {
+    async signIn({ user, account }) {
       if (account?.provider === "google") {
         console.log("Login - Google Success")
+      }
+
+      // Auto-verify email on first OAuth login, since providers like Google/Github already verify
+      if (account && account.provider !== "credentials" && user?.email && !user.emailVerified) {
+          await prisma.user.update({
+              where: { email: user.email },
+              data: { emailVerified: new Date() }
+          })
       }
     },
     async createUser({ user }) {
@@ -132,7 +156,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Automatically provision an empty dashboard/organization for new OAuth users
         await prisma.teamMember.create({
           data: {
-            userId: user.id,
+            user: { connect: { id: user.id } },
             role: "Owner",
             team: {
               create: {

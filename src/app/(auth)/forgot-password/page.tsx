@@ -11,9 +11,12 @@ import { requestPasswordReset } from "@/lib/actions/auth-flow"
 import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
 
+import { MailCheck } from "lucide-react"
+
 export default function ForgotPasswordPage() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,15 +27,35 @@ export default function ForgotPasswordPage() {
 
     try {
         await requestPasswordReset(email)
-        toast({
-            title: "Recovery Signal Sent",
-            description: "If an account exists, you will receive encrypted reset instructions.",
-        })
+        setIsSuccess(true)
     } catch (e) {
         toast({ variant: "destructive", title: "Error", description: "Failed to send reset link." })
     } finally {
         setLoading(false)
     }
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4 animate-in fade-in zoom-in-95 duration-500">
+        <Card className="w-full max-w-md shadow-xl border-t-4 border-t-primary text-center pt-8">
+            <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+                <MailCheck className="h-10 w-10 text-primary" />
+            </div>
+            <CardHeader>
+                <CardTitle className="text-3xl font-headline">Email Sent</CardTitle>
+                <CardDescription className="text-base">
+                  If an account exists for that email, we've sent instructions on how to reset your password.
+                </CardDescription>
+            </CardHeader>
+            <CardFooter className="pt-4 pb-8 flex justify-center">
+                <Button variant="ghost" asChild>
+                    <Link href="/login"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Login</Link>
+                </Button>
+            </CardFooter>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -60,7 +83,7 @@ export default function ForgotPasswordPage() {
                     {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="mr-2 h-4 w-4" />}
                     {loading ? "Sending..." : "Send Recovery Link"}
                 </Button>
-                <Button variant="ghost" className="w-full" asChild type="button">
+                <Button variant="ghost" className="w-full" asChild type="button" disabled={loading}>
                     <Link href="/login"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Login</Link>
                 </Button>
               </CardFooter>

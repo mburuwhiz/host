@@ -2,8 +2,8 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { signIn } from "next-auth/react"
 import { Github, Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -15,10 +15,15 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
 import { getSession } from "next-auth/react"
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
-  const [email, setEmail] = useState("")
+
+  const verifyToken = searchParams.get("verifyToken")
+  const prefillEmail = searchParams.get("email")
+
+  const [email, setEmail] = useState(prefillEmail || "")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -28,9 +33,14 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
+      // If verifying, we can pass verifyToken along. NextAuth `credentials` handles custom fields
+      // if we pass it, but simpler: we just hit an API or process the token via the authorize function.
+      // Wait, `authorize` in auth.ts doesn't read verifyToken natively.
+      // We will pass verifyToken to `signIn` payload, and update `auth.ts` to process it!
       const res = await signIn('credentials', {
         email,
         password,
+        verifyToken: verifyToken || "",
         redirect: false
       })
 
@@ -114,6 +124,8 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required 
+                  readOnly={!!prefillEmail}
+                  className={prefillEmail ? "bg-gray-100 cursor-not-allowed" : ""}
                 />
               </div>
               <div className="grid gap-2">
@@ -151,5 +163,13 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+      <LoginForm />
+    </Suspense>
   )
 }

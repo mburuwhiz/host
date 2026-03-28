@@ -48,7 +48,7 @@ export async function registerUser(formData: FormData) {
     })
 
     const token = randomBytes(32).toString('hex')
-    const expires = new Date(new Date().getTime() + 24 * 60 * 60 * 1000) // 24 hours
+    const expires = new Date(new Date().getTime() + 1 * 60 * 60 * 1000) // 1 hour
 
     await prisma.verificationToken.create({
       data: {
