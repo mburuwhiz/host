@@ -13,15 +13,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   logger: {
     error(code, metadata) {
-      if (code.name === "CredentialsSignin") return
-      console.error(code, metadata)
+      if (code.name === "CredentialsSignin") {
+        console.log("Login - Pass - Failed")
+        return
+      }
     },
-    warn(code) {
-      console.warn(code)
-    },
-    debug(code, metadata) {
-      console.debug(code, metadata)
-    }
+    warn(code) {},
+    debug(code, metadata) {}
   },
   pages: {
     signIn: '/login',
@@ -122,6 +120,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     })
   ],
   events: {
+    async signIn({ account }) {
+      if (account?.provider === "google") {
+        console.log("Login - Google Success")
+      }
+    },
     async createUser({ user }) {
       if (user.id) {
         // Automatically provision an empty dashboard/organization for new OAuth users
