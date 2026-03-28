@@ -9,12 +9,15 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 
+import { useEffect, useState } from "react"
+import { getAllTickets } from "@/lib/actions/support"
+
 export default function AdminSupportManagement() {
-  const tickets = [
-    { id: "T-8821", user: "John Doe", org: "TWOEM Eng", subject: "Build failing on Node-04", status: "New", time: "12m ago", priority: "High" },
-    { id: "T-8820", user: "Alice Tech", org: "Company.io", subject: "Custom domain reverification", status: "Open", time: "2h ago", priority: "Medium" },
-    { id: "T-8819", user: "Bob Builder", org: "Dev.net", subject: "NVMe partition query", status: "Open", time: "5h ago", priority: "Low" },
-  ]
+  const [tickets, setTickets] = useState<any[]>([])
+
+  useEffect(() => {
+    getAllTickets().then(setTickets)
+  }, [])
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500">

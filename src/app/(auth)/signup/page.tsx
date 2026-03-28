@@ -3,7 +3,7 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { Github, Mail, User, Building2, Phone, Briefcase, ArrowLeft, Loader2 } from "lucide-react"
+import { Github, Mail, User, Building2, Phone, Briefcase, ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -28,8 +28,6 @@ export default function SignupPage() {
     setLoading(true)
 
     const formData = new FormData(e.target as HTMLFormElement)
-    const email = formData.get("email") as string
-    const password = formData.get("password") as string
 
     try {
       const res = await registerUser(formData)
@@ -39,26 +37,28 @@ export default function SignupPage() {
         return
       }
 
-      const loginRes = await signIn("credentials", {
-        email,
-        password,
-        redirect: false
+      toast({
+          title: "Account Provisioned",
+          description: "Please check your email to verify your account.",
       })
-
-      if (loginRes?.error) {
-         toast({ variant: "destructive", title: "Error", description: "Failed to login after registration." })
-      } else {
-         toast({
-            title: "Account Provisioned",
-            description: "Welcome to the TWOEM cluster. Proceeding to onboarding.",
-         })
-         router.push("/onboarding")
-      }
+      router.push("/verify-request")
     } catch(err) {
       toast({ variant: "destructive", title: "Error", description: "An error occurred." })
     } finally {
       setLoading(false)
     }
+  }
+
+  const [step, setStep] = useState(1)
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setStep(step + 1)
+  }
+
+  const handleBack = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setStep(step - 1)
   }
 
   return (
@@ -77,11 +77,11 @@ export default function SignupPage() {
           </CardHeader>
           <CardContent className="p-10 space-y-8">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button variant="outline" className="h-12 border-2">
+              <Button variant="outline" className="h-12 border-2" onClick={() => signIn('github')} type="button">
                 <Github className="mr-2 h-5 w-5" />
                 GitHub
               </Button>
-              <Button variant="outline" className="h-12 border-2">
+              <Button variant="outline" className="h-12 border-2" onClick={() => signIn('google')} type="button">
                 <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -101,107 +101,135 @@ export default function SignupPage() {
               </div>
             </div>
 
-            <form onSubmit={handleSignup} className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="fullname">Full Name</Label>
-                  <div className="relative group">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="fullname" name="fullname" placeholder="Johnathan Doe" className="pl-10" required />
-                  </div>
+            <form onSubmit={handleSignup} className="space-y-8 relative">
+              {step === 1 && (
+                <div className="animate-in fade-in slide-in-from-right-8 duration-500">
+                    <h3 className="text-xl font-bold mb-6 font-headline text-primary">Step 1: Personal Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                        <Label htmlFor="fullname">Full Name</Label>
+                        <div className="relative group">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input id="fullname" name="fullname" placeholder="Johnathan Doe" className="pl-10" required />
+                        </div>
+                        </div>
+                        <div className="space-y-2">
+                        <Label htmlFor="email">Work Email</Label>
+                        <div className="relative group">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input id="email" name="email" type="email" placeholder="john@company.com" className="pl-10" required />
+                        </div>
+                        </div>
+                        <div className="space-y-2">
+                        <Label htmlFor="birthyear">Birth Year</Label>
+                        <Select name="birthyear" required>
+                            <SelectTrigger id="birthyear" className="h-10">
+                            <SelectValue placeholder="Select Year" />
+                            </SelectTrigger>
+                            <SelectContent>
+                            {years.map((year) => (
+                                <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                        </div>
+                        <div className="space-y-2">
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <div className="relative group">
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input id="phone" name="phone" type="tel" placeholder="+254 700 000 000" className="pl-10" />
+                        </div>
+                        </div>
+                    </div>
+                    <div className="flex justify-end mt-8">
+                        <Button type="button" onClick={handleNext} className="w-full sm:w-auto h-12 px-8 rounded-full">Continue <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                    </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="birthyear">Birth Year</Label>
-                  <Select name="birthyear" required>
-                    <SelectTrigger id="birthyear" className="h-10">
-                      <SelectValue placeholder="Select Year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {years.map((year) => (
-                        <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Work Email</Label>
-                  <div className="relative group">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="email" name="email" type="email" placeholder="john@company.com" className="pl-10" required />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <div className="relative group">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="phone" name="phone" type="tel" placeholder="+254 700 000 000" className="pl-10" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company</Label>
-                  <div className="relative group">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="company" name="company" placeholder="Organization name" className="pl-10" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="position">Position</Label>
-                  <div className="relative group">
-                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="position" name="position" placeholder="Job title" className="pl-10" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Primary Role</Label>
-                  <Select name="role" required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="eng">Engineer</SelectItem>
-                      <SelectItem value="ops">DevOps/SRE</SelectItem>
-                      <SelectItem value="founder">Founder</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="language">Programming Language</Label>
-                  <Select name="language" required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Main language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="js">Node.js</SelectItem>
-                      <SelectItem value="py">Python</SelectItem>
-                      <SelectItem value="go">Go</SelectItem>
-                      <SelectItem value="rs">Rust</SelectItem>
-                      <SelectItem value="others">Others</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              )}
 
-              <div className="pt-4 space-y-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input id="password" name="password" type="password" required />
-                  <p className="text-[10px] text-muted-foreground">Encryption level: Argon2id (Master Cluster standard).</p>
+              {step === 2 && (
+                <div className="animate-in fade-in slide-in-from-right-8 duration-500">
+                    <h3 className="text-xl font-bold mb-6 font-headline text-primary">Step 2: Professional Profile</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                        <Label htmlFor="company">Company</Label>
+                        <div className="relative group">
+                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input id="company" name="company" placeholder="Organization name" className="pl-10" />
+                        </div>
+                        </div>
+                        <div className="space-y-2">
+                        <Label htmlFor="position">Position</Label>
+                        <div className="relative group">
+                            <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input id="position" name="position" placeholder="Job title" className="pl-10" />
+                        </div>
+                        </div>
+                        <div className="space-y-2">
+                        <Label htmlFor="role">Primary Role</Label>
+                        <Select name="role" required>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                            <SelectItem value="eng">Engineer</SelectItem>
+                            <SelectItem value="ops">DevOps/SRE</SelectItem>
+                            <SelectItem value="founder">Founder</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        </div>
+                        <div className="space-y-2">
+                        <Label htmlFor="language">Programming Language</Label>
+                        <Select name="language" required>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Main language" />
+                            </SelectTrigger>
+                            <SelectContent>
+                            <SelectItem value="js">Node.js</SelectItem>
+                            <SelectItem value="py">Python</SelectItem>
+                            <SelectItem value="go">Go</SelectItem>
+                            <SelectItem value="rs">Rust</SelectItem>
+                            <SelectItem value="others">Others</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        </div>
+                    </div>
+                    <div className="flex justify-between mt-8">
+                        <Button type="button" variant="outline" onClick={handleBack} className="h-12 px-8 rounded-full"><ArrowLeft className="mr-2 h-4 w-4" /> Back</Button>
+                        <Button type="button" onClick={handleNext} className="w-full sm:w-auto h-12 px-8 rounded-full">Continue <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                    </div>
                 </div>
-              </div>
+              )}
 
-              <div className="flex items-start gap-3 p-4 bg-primary/5 rounded-xl border border-primary/20">
-                <Checkbox id="terms" className="mt-1" required />
-                <div className="grid gap-1 leading-none">
-                  <Label htmlFor="terms" className="text-sm font-medium cursor-pointer">
-                    I agree to the <Link href="/legal" className="text-primary hover:underline">Terms of Service</Link> and <Link href="/legal" className="text-primary hover:underline">Privacy Policy</Link>
-                  </Label>
-                  <p className="text-xs text-muted-foreground">Required for cluster resource provisioning.</p>
+              {step === 3 && (
+                <div className="animate-in fade-in slide-in-from-right-8 duration-500">
+                    <h3 className="text-xl font-bold mb-6 font-headline text-primary">Step 3: Secure Account</h3>
+                    <div className="space-y-6">
+                        <div className="grid gap-2">
+                            <Label htmlFor="password">Password</Label>
+                            <Input id="password" name="password" type="password" required className="h-12" />
+                            <p className="text-[10px] text-muted-foreground">Encryption level: Argon2id (Master Cluster standard).</p>
+                        </div>
+
+                        <div className="flex items-start gap-3 p-4 bg-primary/5 rounded-xl border border-primary/20">
+                            <Checkbox id="terms" className="mt-1" required />
+                            <div className="grid gap-1 leading-none">
+                            <Label htmlFor="terms" className="text-sm font-medium cursor-pointer">
+                                I agree to the <Link href="/legal" className="text-primary hover:underline">Terms of Service</Link> and <Link href="/legal" className="text-primary hover:underline">Privacy Policy</Link>
+                            </Label>
+                            <p className="text-xs text-muted-foreground">Required for cluster resource provisioning.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-between pt-4">
+                            <Button type="button" variant="outline" onClick={handleBack} className="h-12 px-8 rounded-full"><ArrowLeft className="mr-2 h-4 w-4" /> Back</Button>
+                            <Button type="submit" size="lg" className="w-full sm:w-auto h-12 px-12 text-lg font-headline shadow-xl shadow-primary/20 rounded-full" disabled={loading}>
+                                {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : "Initialize Account"}
+                            </Button>
+                        </div>
+                    </div>
                 </div>
-              </div>
-
-              <Button type="submit" size="lg" className="w-full h-14 text-xl font-headline shadow-xl shadow-primary/20" disabled={loading}>
-                {loading ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : "Initialize Account"}
-              </Button>
+              )}
             </form>
           </CardContent>
           <CardFooter className="bg-muted/30 p-8">

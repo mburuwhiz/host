@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/db/prisma"
 import * as argon2 from "argon2"
+import { sendVerificationEmail } from "@/lib/email"
+import { randomBytes } from "crypto"
 
 export async function registerUser(formData: FormData) {
   try {
@@ -44,6 +46,19 @@ export async function registerUser(formData: FormData) {
         }
       }
     })
+
+    const token = randomBytes(32).toString('hex')
+    const expires = new Date(new Date().getTime() + 24 * 60 * 60 * 1000) // 24 hours
+
+    await prisma.verificationToken.create({
+      data: {
+        identifier: email,
+        token,
+        expires
+      }
+    })
+
+    await sendVerificationEmail(email, token)
 
     return { success: true }
   } catch (error) {

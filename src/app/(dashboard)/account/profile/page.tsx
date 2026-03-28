@@ -8,7 +8,12 @@ import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
+import { useSession } from "next-auth/react"
+
 export default function UserProfilePage() {
+  const { data: session } = useSession()
+  const user = session?.user
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="space-y-1">
@@ -25,37 +30,29 @@ export default function UserProfilePage() {
             <div className="flex flex-col md:flex-row gap-8 items-center">
                 <div className="relative group">
                     <Avatar className="h-24 w-24 border-4 border-background shadow-xl">
-                        <AvatarImage src="https://picsum.photos/seed/user/200/200" />
-                        <AvatarFallback>JD</AvatarFallback>
+                        <AvatarImage src={user?.image || ""} />
+                        <AvatarFallback>{user?.name?.[0] || 'U'}</AvatarFallback>
                     </Avatar>
                     <button className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <Camera className="text-white h-8 w-8" />
                     </button>
                 </div>
                 <div className="flex-1 space-y-1 text-center md:text-left">
-                    <h3 className="text-xl font-bold">John Doe</h3>
-                    <p className="text-muted-foreground text-sm">Lead Orchestration @ Twoem Online Prod.</p>
-                    <p className="text-xs text-primary font-mono bg-primary/10 inline-block px-2 py-0.5 rounded-full mt-2">Member since Jan 2024</p>
+                    <h3 className="text-xl font-bold">{user?.name || 'Loading...'}</h3>
+                    <p className="text-muted-foreground text-sm">{user?.email || 'Loading...'}</p>
+                    <p className="text-xs text-primary font-mono bg-primary/10 inline-block px-2 py-0.5 rounded-full mt-2">{(user as any)?.role || 'StandardUser'}</p>
                 </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6 pt-4">
                 <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input id="firstName" defaultValue="John" className="h-11" />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input id="lastName" defaultValue="Doe" className="h-11" />
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input id="name" defaultValue={user?.name || ""} className="h-11" />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="email">Work Email</Label>
-                    <Input id="email" type="email" defaultValue="john.doe@twoem.app" className="h-11" />
-                    <p className="text-[10px] text-emerald-600">Email verified</p>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" type="tel" placeholder="+254 700 000 000" defaultValue="+254 711 222 333" className="h-11" />
+                    <Input id="email" type="email" defaultValue={user?.email || ""} className="h-11" disabled />
+                    <p className="text-[10px] text-emerald-600">Verified</p>
                 </div>
             </div>
           </CardContent>

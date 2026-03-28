@@ -10,11 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function TeamMembersPage() {
-  const members = [
-    { name: "John Doe", email: "john@twoem.com", role: "Owner", status: "Active" },
-    { name: "Alice Tech", email: "alice@company.io", role: "Developer", status: "Active" },
-    { name: "Bob Builder", email: "bob@dev.net", role: "Viewer", status: "Pending" },
-  ]
+  const members: any[] = [] // TODO: Fetch from database
 
   return (
     <div className="max-w-5xl mx-auto space-y-10">

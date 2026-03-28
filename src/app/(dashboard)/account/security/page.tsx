@@ -68,11 +68,7 @@ export default function SecuritySettingsPage() {
             </CardHeader>
             <CardContent className="p-0">
                 <div className="divide-y">
-                    {[
-                        { device: "Chrome on macOS", location: "Nairobi, KE", status: "Current", time: "Active now" },
-                        { device: "TWOEM CLI v2.1", location: "Ubuntu Node 04", status: "Active", time: "2h ago" },
-                        { device: "Safari on iPhone", location: "Mombasa, KE", status: "Active", time: "1d ago" }
-                    ].map((session, i) => (
+                    {[] /* TODO: Fetch active sessions from database if implementing multi-session tracking */.map((session: any, i) => (
                         <div key={i} className="flex items-center justify-between p-4">
                             <div className="flex items-center gap-4">
                                 <Lock className="h-4 w-4 text-muted-foreground" />
@@ -84,6 +80,9 @@ export default function SecuritySettingsPage() {
                             <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10">Revoke</Button>
                         </div>
                     ))}
+                    <div className="p-8 text-center text-sm text-muted-foreground">
+                        Session tracking currently limited to current device.
+                    </div>
                 </div>
             </CardContent>
         </Card>
