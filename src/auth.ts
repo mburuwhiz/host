@@ -90,6 +90,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
     })
   ],
+  events: {
+    async createUser({ user }) {
+      if (user.id) {
+        // Automatically provision an empty dashboard/organization for new OAuth users
+        await prisma.teamMember.create({
+          data: {
+            userId: user.id,
+            role: "Owner",
+            team: {
+              create: {
+                name: `${user.name || "My"}'s Workspace`,
+                org: "Personal"
+              }
+            }
+          }
+        })
+      }
+    }
+  },
   callbacks: {
     async signIn({ user, account }) {
       // Allow OAuth without email verification strictly checking if credentials

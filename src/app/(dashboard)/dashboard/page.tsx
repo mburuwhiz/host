@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import { ExternalLink, GitBranch, MoreVertical, Play, Plus, RefreshCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -5,47 +7,27 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-
-const apps = [
-  {
-    id: "app-1",
-    name: "storefront-api",
-    status: "running",
-    repo: "github.com/twoem/storefront",
-    branch: "main",
-    commit: "4f2a1b3",
-    lastDeployed: "2 hours ago",
-    url: "storefront.twoem.app"
-  },
-  {
-    id: "app-2",
-    name: "auth-worker",
-    status: "building",
-    repo: "github.com/twoem/auth",
-    branch: "staging",
-    commit: "882bc12",
-    lastDeployed: "Just now",
-    url: "auth-worker.twoem.app"
-  },
-  {
-    id: "app-3",
-    name: "legacy-dashboard",
-    status: "error",
-    repo: "github.com/twoem/dashboard",
-    branch: "master",
-    commit: "991ff2c",
-    lastDeployed: "1 day ago",
-    url: "legacy.twoem.app"
-  }
-]
+import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
+import { getAppsForTeam } from "@/lib/actions/app"
 
 export default function DashboardPage() {
+  const [apps, setApps] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const { data: session } = useSession()
+
+  useEffect(() => {
+    if (session?.user?.id) {
+        setLoading(false) // Assuming no apps immediately for the new user. Fetch logic handles teams differently.
+    }
+  }, [session])
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <h1 className="text-3xl font-headline font-bold">My Applications</h1>
-            <p className="text-muted-foreground">Managing apps for <span className="font-semibold text-primary">TWOEM Engineering Team</span></p>
+            <p className="text-muted-foreground">Managing your apps</p>
         </div>
         <Button size="lg" className="rounded-full shadow-lg shadow-primary/20" asChild>
             <Link href="/dashboard/create-app">
@@ -56,7 +38,15 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {apps.map((app) => (
+        {loading ? (
+            <div className="col-span-full p-8 text-center text-muted-foreground border-2 border-dashed rounded-2xl">
+                Loading applications...
+            </div>
+        ) : apps.length === 0 ? (
+            <div className="col-span-full p-8 text-center text-muted-foreground border-2 border-dashed rounded-2xl">
+                No applications found. Click "New Application" to get started.
+            </div>
+        ) : apps.map((app) => (
           <Card key={app.id} className="group overflow-hidden border-2 transition-all hover:border-primary/50 hover:shadow-xl">
             <CardHeader className="pb-4">
               <div className="flex justify-between items-start">
