@@ -1,0 +1,22 @@
+{
+  "placeholderImages": [
+    {
+      "id": "hero-bg",
+      "description": "Abstract technological background with flowing gradients",
+      "imageUrl": "https://picsum.photos/seed/twoem-hero/1200/800",
+      "imageHint": "abstract tech"
+    },
+    {
+      "id": "dashboard-preview",
+      "description": "Clean modern dashboard interface",
+      "imageUrl": "https://picsum.photos/seed/twoem-dashboard/1000/600",
+      "imageHint": "dashboard software"
+    },
+    {
+      "id": "deployment-visual",
+      "description": "Conceptual visualization of server nodes",
+      "imageUrl": "https://picsum.photos/seed/twoem-nodes/600/400",
+      "imageHint": "server farm"
+    }
+  ]
+}
