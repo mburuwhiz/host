@@ -19,7 +19,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null
+        if (!credentials?.email || !credentials?.password) throw new Error("Missing credentials")
 
         let user = await prisma.user.findUnique({
           where: { email: credentials.email as string }
@@ -37,11 +37,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             })
         }
 
-        if (!user || !user.passwordHash) return null
+        if (!user || !user.passwordHash) throw new Error("User not found")
 
         const isPasswordValid = await argon2.verify(user.passwordHash, credentials.password as string)
 
-        if (!isPasswordValid) return null
+        if (!isPasswordValid) throw new Error("Invalid password")
 
         return { id: user.id, email: user.email, name: user.name, role: user.role }
       }

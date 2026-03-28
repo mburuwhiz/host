@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import Providers from "@/components/providers";
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: 'TWOEM ONLINE PRODUCTIONS - PaaS Engine',
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className="font-body antialiased selection:bg-primary selection:text-primary-foreground">
         <Providers>
           {children}
+          <Toaster />
         </Providers>
       </body>
     </html>
