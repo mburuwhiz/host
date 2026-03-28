@@ -1,51 +1,38 @@
 "use server"
 
 import { prisma } from "@/lib/db/prisma"
+import { auth } from "@/auth"
 
-export async function getGlobalStats() {
-    try {
-        const [activeApps, totalNodes, activeUsers] = await Promise.all([
-            prisma.app.count({ where: { status: 'running' } }),
-            prisma.node.count(),
-            prisma.user.count()
-        ]);
-
-        return {
-            activeApps,
-            totalNodes,
-            activeUsers,
-            clusterLoad: "68.4%"
-        };
-    } catch (e) {
-        console.error(e)
-        return {
-            activeApps: 0,
-            totalNodes: 0,
-            activeUsers: 0,
-            clusterLoad: "0%"
-        }
+async function verifySuperAdmin() {
+    const session = await auth();
+    if (!session?.user || (session.user as any).role !== 'SuperAdmin') {
+        throw new Error("Unauthorized: SuperAdmin access required.");
     }
 }
 
-export async function getAllTeams() {
+export async function updateUserRole(userId: string, newRole: string) {
     try {
-        const teams = await prisma.team.findMany({
-            include: {
-                _count: { select: { members: true, apps: true } }
-            }
-        })
-        return teams.map(t => ({
-            id: t.id,
-            name: t.name,
-            org: t.org || 'Personal',
-            apps: t._count.apps,
-            members: t._count.members,
-            storage: t.storageUsed + 'GB',
-            status: t.status,
-            role: 'Member'
-        }))
-    } catch (e) {
-        console.error(e)
-        return []
+        await verifySuperAdmin();
+        await prisma.user.update({
+            where: { id: userId },
+            data: { role: newRole }
+        });
+        return { success: true };
+    } catch (e: any) {
+        console.error(e);
+        return { success: false, error: e.message || "Failed to update user role." };
+    }
+}
+
+export async function deleteUser(userId: string) {
+    try {
+        await verifySuperAdmin();
+        await prisma.user.delete({
+            where: { id: userId }
+        });
+        return { success: true };
+    } catch (e: any) {
+        console.error(e);
+        return { success: false, error: e.message || "Failed to delete user." };
     }
 }

@@ -56,6 +56,7 @@ model User {
   sessions       Session[]
   memberships    TeamMember[]
   tickets        Ticket[]
+  apiTokens      ApiToken[]
 }
 
 model VerificationToken {
@@ -132,6 +133,19 @@ model EnvVar {
   app   App    @relation(fields: [appId], references: [id], onDelete: Cascade)
 
   @@unique([appId, key])
+}
+
+model ApiToken {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  tokenHash String   @unique // Store the hash of the token for verification
+  prefix    String   // Used for UI display (e.g. "twoem_xyz123...")
+  lastUsed  DateTime?
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }
 
 model Deployment {

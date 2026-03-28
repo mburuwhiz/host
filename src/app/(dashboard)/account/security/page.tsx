@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge"
 
 export default function SecuritySettingsPage() {
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="space-y-1">

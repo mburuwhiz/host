@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { signIn } from "next-auth/react"
-import { Github, ShieldAlert, Loader2, ArrowLeft } from "lucide-react"
+import { Github, Loader2, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -126,15 +126,6 @@ export default function LoginPage() {
                   required 
                 />
               </div>
-
-              <Alert className="mt-2 bg-primary/5 border-primary/20">
-                <ShieldAlert className="h-4 w-4 text-primary" />
-                <AlertTitle className="text-xs font-bold text-primary">Test Mode</AlertTitle>
-                <AlertDescription className="text-[10px] text-muted-foreground">
-                  Admin: <strong>admin@twoem.com</strong> | User: <strong>test@twoem.com</strong><br/>
-                  Password: <strong>Pass123</strong>
-                </AlertDescription>
-              </Alert>
 
               <Button type="submit" className="w-full h-12 text-lg font-headline mt-2" disabled={loading}>
                 {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : "Login to TWOEM"}

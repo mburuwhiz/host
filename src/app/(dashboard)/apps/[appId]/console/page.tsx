@@ -7,9 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 
+import { useSession } from "next-auth/react"
+
 export default function WebConsolePage({ params }: { params: { appId: string } }) {
   const { toast } = useToast()
   const [input, setInput] = useState("")
+  const { data: session } = useSession()
   const [history, setHistory] = useState<string[]>([
     "TWOEM ONLINE PRODUCTIONS (v2.10.0-stable)",
     `Connected to container: ${params.appId}-prod-v1`,

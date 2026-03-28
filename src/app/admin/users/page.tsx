@@ -16,15 +16,49 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { getAllUsers } from "@/lib/actions/user"
+import { updateUserRole, deleteUser } from "@/lib/actions/admin"
+import { useToast } from "@/hooks/use-toast"
+import { Loader2 } from "lucide-react"
 
 export default function AdminUserManagement() {
   const [users, setUsers] = useState<any[]>([])
+  const [isPending, startTransition] = useTransition()
+  const { toast } = useToast()
+
+  const fetchUsers = () => {
+    getAllUsers().then(setUsers)
+  }
 
   useEffect(() => {
-    getAllUsers().then(setUsers)
+    fetchUsers()
   }, [])
+
+  const handleRoleChange = (userId: string, newRole: string) => {
+    startTransition(async () => {
+        const res = await updateUserRole(userId, newRole);
+        if (res.success) {
+            toast({ title: "Success", description: `User role updated to ${newRole}` });
+            fetchUsers();
+        } else {
+            toast({ variant: "destructive", title: "Error", description: res.error });
+        }
+    })
+  }
+
+  const handleDeleteUser = (userId: string) => {
+    if (!confirm("Are you sure you want to permanently delete this operator?")) return;
+    startTransition(async () => {
+        const res = await deleteUser(userId);
+        if (res.success) {
+            toast({ title: "Success", description: "Operator deleted successfully." });
+            fetchUsers();
+        } else {
+            toast({ variant: "destructive", title: "Error", description: res.error });
+        }
+    })
+  }
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
@@ -133,11 +167,11 @@ export default function AdminUserManagement() {
                             <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 border-2 border-transparent hover:border-muted hover:bg-white transition-all"><MoreHorizontal className="h-5 w-5 text-zinc-400" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl border-2 shadow-2xl">
+                            <DropdownMenuItem className="rounded-xl font-bold p-3" onClick={() => handleRoleChange(u.id, u.role === 'SuperAdmin' ? 'StandardUser' : 'SuperAdmin')}>Toggle SuperAdmin</DropdownMenuItem>
                             <DropdownMenuItem className="rounded-xl font-bold p-3">View Full Audit Log</DropdownMenuItem>
                             <DropdownMenuItem className="rounded-xl font-bold p-3">Impersonate Session</DropdownMenuItem>
-                            <DropdownMenuItem className="rounded-xl font-bold p-3">Adjust Resource Quotas</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive font-bold rounded-xl p-3 focus:bg-destructive/5 focus:text-destructive">Suspend Operator Access</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive font-bold rounded-xl p-3 focus:bg-destructive/5 focus:text-destructive" onClick={() => handleDeleteUser(u.id)}>Delete Operator</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>

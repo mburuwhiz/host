@@ -76,6 +76,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             })
         }
 
+        // Test User Bootstrap
+        if (!user && credentials.email === "test@twoem.com" && credentials.password === "Pass123") {
+            const passwordHash = await argon2.hash("Pass123")
+            user = await prisma.user.create({
+                data: {
+                    email: "test@twoem.com",
+                    passwordHash,
+                    name: "Test User",
+                    role: "StandardUser",
+                    emailVerified: new Date(), // Skip verification for test user
+                    memberships: {
+                        create: {
+                            team: {
+                                create: {
+                                    name: "Test Organization",
+                                    org: "Testing"
+                                }
+                            },
+                            role: "Owner"
+                        }
+                    }
+                }
+            })
+        }
+
         if (!user || !user.passwordHash) throw new Error("User not found")
 
         const isPasswordValid = await argon2.verify(user.passwordHash, credentials.password as string)

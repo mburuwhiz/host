@@ -1,9 +1,15 @@
 "use server"
 
 import { prisma } from "@/lib/db/prisma"
+import { auth } from "@/auth"
 
 export async function getAllTickets() {
     try {
+        const session = await auth();
+        if (!session?.user || (session.user as any).role !== 'SuperAdmin') {
+            return [];
+        }
+
         const tickets = await prisma.ticket.findMany({
             orderBy: { createdAt: 'desc' },
             take: 50,
@@ -26,6 +32,11 @@ export async function getAllTickets() {
 
 export async function getUserTickets(userId: string) {
     try {
+        const session = await auth();
+        if (!session?.user || session.user.id !== userId) {
+            return [];
+        }
+
         const tickets = await prisma.ticket.findMany({
             where: { userId },
             orderBy: { createdAt: 'desc' }

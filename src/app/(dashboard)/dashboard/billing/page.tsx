@@ -5,8 +5,8 @@ import { CreditCard, Download, Plus, Zap, ShieldCheck } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-
 export default function TeamBillingPage() {
+
   return (
     <div className="max-w-4xl mx-auto space-y-10">
       <div>

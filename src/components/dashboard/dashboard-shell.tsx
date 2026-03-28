@@ -4,6 +4,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
+import { useSession, signOut } from "next-auth/react"
 import { 
   LayoutDashboard, 
   PlusCircle, 
@@ -56,6 +57,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { toast } = useToast()
   const [isCommandOpen, setIsCommandOpen] = useState(false)
+  const { data: session } = useSession()
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -115,24 +117,17 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <div className="p-6 border-t space-y-6">
             <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100">
                 <div className="flex justify-between items-center mb-3">
-                    <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">NVMe Partition</p>
-                    <span className="text-[10px] text-emerald-700 font-bold bg-white px-2 py-0.5 rounded-full border border-emerald-100">45%</span>
+                    <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Storage Partition</p>
+                    <span className="text-[10px] text-emerald-700 font-bold bg-white px-2 py-0.5 rounded-full border border-emerald-100">0%</span>
                 </div>
                 <div className="h-2 bg-emerald-200/30 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 w-[45%] rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]" />
+                    <div className="h-full bg-emerald-500 w-[0%] rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]" />
                 </div>
                 <div className="flex justify-between mt-3">
-                    <p className="text-[10px] text-emerald-600/70 font-bold">1.1TB USED</p>
-                    <p className="text-[10px] text-emerald-600/70 font-bold">2.5TB LIMIT</p>
+                    <p className="text-[10px] text-emerald-600/70 font-bold">0GB USED</p>
+                    <p className="text-[10px] text-emerald-600/70 font-bold">10GB LIMIT</p>
                 </div>
             </div>
-            <Button 
-                variant="ghost" 
-                onClick={handleLogout}
-                className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/5 rounded-xl font-bold h-12"
-            >
-                <LogOut className="mr-3 h-4 w-4" /> Sign out
-            </Button>
         </div>
       </aside>
 
@@ -165,12 +160,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="gap-3 px-3 py-2 hover:bg-muted/50 rounded-full transition-all border-2 border-transparent hover:border-muted h-12">
                         <Avatar className="h-8 w-8 border-2 border-primary/20">
-                            <AvatarImage src="https://picsum.photos/seed/user-john/100/100" />
-                            <AvatarFallback className="bg-primary/10 text-primary font-bold">JD</AvatarFallback>
+                            <AvatarImage src={session?.user?.image || ""} />
+                            <AvatarFallback className="bg-primary/10 text-primary font-bold">{session?.user?.name?.[0] || 'U'}</AvatarFallback>
                         </Avatar>
                         <div className="hidden lg:flex flex-col items-start text-left">
-                            <span className="font-bold text-sm leading-none">John Doe</span>
-                            <span className="text-[10px] text-muted-foreground font-bold uppercase mt-1">Operator L5</span>
+                            <span className="font-bold text-sm leading-none">{session?.user?.name || 'User'}</span>
+                            <span className="text-[10px] text-muted-foreground font-bold uppercase mt-1">{(session?.user as any)?.role || 'Operator L5'}</span>
                         </div>
                         <ChevronDown className="h-4 w-4 text-muted-foreground" />
                     </Button>
@@ -179,14 +174,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     <DropdownMenuLabel className="px-3 pb-3 border-b mb-2">
                         <div className="flex flex-col">
                             <span className="font-headline font-bold">My Account</span>
-                            <span className="text-xs text-muted-foreground font-normal">john.doe@twoem.app</span>
+                            <span className="text-xs text-muted-foreground font-normal">{session?.user?.email || 'user@twoem.app'}</span>
                         </div>
                     </DropdownMenuLabel>
                     <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 cursor-pointer font-medium"><Link href="/account/profile">Profile Settings</Link></DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 cursor-pointer font-medium"><Link href="/account/security">Security & 2FA</Link></DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 cursor-pointer font-medium"><Link href="/account/tokens">API Access Tokens</Link></DropdownMenuItem>
                     <DropdownMenuSeparator className="my-2" />
-                    <DropdownMenuItem onClick={handleLogout} className="text-destructive rounded-xl px-3 py-2.5 cursor-pointer font-bold focus:bg-destructive/5 focus:text-destructive">
+                    <DropdownMenuItem onClick={async () => await signOut({ callbackUrl: '/login' })} className="text-destructive rounded-xl px-3 py-2.5 cursor-pointer font-bold focus:bg-destructive/5 focus:text-destructive">
                         Terminate Session
                     </DropdownMenuItem>
                 </DropdownMenuContent>

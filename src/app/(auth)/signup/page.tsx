@@ -20,8 +20,29 @@ export default function SignupPage() {
   const { toast } = useToast()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [formDataState, setFormDataState] = useState({
+    fullname: "",
+    email: "",
+    password: "",
+    company: "",
+    role: "",
+    phone: "",
+    dobDay: "",
+    dobMonth: "",
+    dobYear: "",
+    compliance: false,
+  })
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i)
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target
+    setFormDataState(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }))
+  }
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormDataState(prev => ({ ...prev, [name]: value }))
+  }
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -110,19 +131,19 @@ export default function SignupPage() {
                         <Label htmlFor="fullname">Full Name</Label>
                         <div className="relative group">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input id="fullname" name="fullname" placeholder="Johnathan Doe" className="pl-10" required />
+                            <Input id="fullname" name="fullname" value={formDataState.fullname} onChange={handleInputChange} placeholder="Johnathan Doe" className="pl-10" required />
                         </div>
                         </div>
                         <div className="space-y-2">
                         <Label htmlFor="email">Work Email</Label>
                         <div className="relative group">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input id="email" name="email" type="email" placeholder="john@company.com" className="pl-10" required />
+                            <Input id="email" name="email" type="email" value={formDataState.email} onChange={handleInputChange} placeholder="john@company.com" className="pl-10" required />
                         </div>
                         </div>
                         <div className="space-y-2">
                         <Label htmlFor="birthyear">Birth Year</Label>
-                        <Select name="birthyear" required>
+                        <Select name="birthyear" value={formDataState.dobYear} onValueChange={(val) => handleSelectChange('dobYear', val)} required>
                             <SelectTrigger id="birthyear" className="h-10">
                             <SelectValue placeholder="Select Year" />
                             </SelectTrigger>
@@ -155,19 +176,19 @@ export default function SignupPage() {
                         <Label htmlFor="company">Company</Label>
                         <div className="relative group">
                             <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input id="company" name="company" placeholder="Organization name" className="pl-10" />
+                            <Input id="company" name="company" value={formDataState.company} onChange={handleInputChange} placeholder="Organization name" className="pl-10" />
                         </div>
                         </div>
                         <div className="space-y-2">
                         <Label htmlFor="position">Position</Label>
                         <div className="relative group">
                             <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input id="position" name="position" placeholder="Job title" className="pl-10" />
+                            <Input id="position" name="position" defaultValue="" placeholder="Job title" className="pl-10" />
                         </div>
                         </div>
                         <div className="space-y-2">
                         <Label htmlFor="role">Primary Role</Label>
-                        <Select name="role" required>
+                        <Select name="role" value={formDataState.role} onValueChange={(val) => handleSelectChange('role', val)} required>
                             <SelectTrigger>
                             <SelectValue placeholder="Select role" />
                             </SelectTrigger>
@@ -207,12 +228,12 @@ export default function SignupPage() {
                     <div className="space-y-6">
                         <div className="grid gap-2">
                             <Label htmlFor="password">Password</Label>
-                            <Input id="password" name="password" type="password" required className="h-12" />
+                            <Input id="password" name="password" type="password" value={formDataState.password} onChange={handleInputChange} required className="h-12" />
                             <p className="text-[10px] text-muted-foreground">Encryption level: Argon2id (Master Cluster standard).</p>
                         </div>
 
                         <div className="flex items-start gap-3 p-4 bg-primary/5 rounded-xl border border-primary/20">
-                            <Checkbox id="terms" className="mt-1" required />
+                            <Checkbox id="terms" className="mt-1" required checked={formDataState.compliance} onCheckedChange={(checked) => setFormDataState(prev => ({...prev, compliance: checked as boolean}))} />
                             <div className="grid gap-1 leading-none">
                             <Label htmlFor="terms" className="text-sm font-medium cursor-pointer">
                                 I agree to the <Link href="/legal" className="text-primary hover:underline">Terms of Service</Link> and <Link href="/legal" className="text-primary hover:underline">Privacy Policy</Link>

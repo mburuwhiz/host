@@ -1,12 +1,18 @@
 "use server"
 
 import { prisma } from "@/lib/db/prisma"
+import { auth } from "@/auth"
 
 export async function getAllUsers() {
     try {
+        const session = await auth();
+        if (!session?.user || (session.user as any).role !== 'SuperAdmin') {
+            return [];
+        }
+
         const users = await prisma.user.findMany({
             include: {
-                _count: { select: { apps: true } },
+                _count: { select: { apps: true, memberships: true, tickets: true } },
                 memberships: { include: { team: true } }
             }
         })

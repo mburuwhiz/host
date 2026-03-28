@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/db/prisma"
 
-export default async function VerifyEmailPage({ searchParams }: { searchParams: { token: string } }) {
-  const token = searchParams.token
+export default async function VerifyEmailPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const params = await searchParams;
+  const token = params.token as string | undefined;
 
   if (!token) {
     redirect("/login?error=MissingToken")
