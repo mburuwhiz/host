@@ -154,14 +154,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async createUser({ user }) {
       if (user.id) {
         // Automatically provision an empty dashboard/organization for new OAuth users
-        await prisma.teamMember.create({
+        await prisma.team.create({
           data: {
-            user: { connect: { id: user.id } },
-            role: "Owner",
-            team: {
+            name: `${user.name || "My"}'s Workspace`,
+            org: "Personal",
+            members: {
               create: {
-                name: `${user.name || "My"}'s Workspace`,
-                org: "Personal"
+                user: { connect: { id: user.id } },
+                role: "Owner",
               }
             }
           }
