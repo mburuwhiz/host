@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
+import { signOut } from "next-auth/react"
 
 const adminNav = [
   { name: "Infrastucture", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -36,12 +37,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter()
   const { toast } = useToast()
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     toast({
       title: "Session Terminated",
       description: "Operator terminal access revoked.",
     })
-    router.push("/login")
+    await signOut({ callbackUrl: '/login', redirect: true })
   }
 
   return (

@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/db/prisma"
 import * as argon2 from "argon2"
-import { sendVerificationEmail } from "@/lib/email"
+import { sendVerificationEmail, sendSignupSuccessEmail } from "@/lib/email"
 import { randomBytes } from "crypto"
 
 export async function registerUser(formData: FormData) {
@@ -59,6 +59,7 @@ export async function registerUser(formData: FormData) {
     })
 
     await sendVerificationEmail(email, token)
+    await sendSignupSuccessEmail(email)
 
     return { success: true }
   } catch (error) {

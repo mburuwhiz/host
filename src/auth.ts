@@ -5,6 +5,7 @@ import GoogleProvider from "next-auth/providers/google"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/db/prisma"
 import * as argon2 from "argon2"
+import { sendLoginNotificationEmail } from "@/lib/email"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -107,11 +108,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!isPasswordValid) throw new Error("Invalid password")
 
-        if (!user.emailVerified) {
-            throw new Error("Email not verified")
-        }
+        // Trigger login notification for credentials login
+        sendLoginNotificationEmail(user.email).catch(console.error)
 
-        return { id: user.id, email: user.email, name: user.name, role: user.role }
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          emailVerified: user.emailVerified
+        }
       }
     })
   ],
@@ -136,25 +142,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
-      // Allow OAuth without email verification strictly checking if credentials
-      if (account?.provider !== "credentials") return true
-      if (user?.email) {
-          const dbUser = await prisma.user.findUnique({ where: { email: user.email }})
-          if (dbUser && !dbUser.emailVerified) {
-              return false // Prevent sign in
-          }
-      }
       return true
     },
     async jwt({ token, user }) {
       if (user) {
         token.role = (user as any).role
+        token.emailVerified = (user as any).emailVerified
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).role = token.role
+        ;(session.user as any).emailVerified = token.emailVerified
       }
       return session
     }

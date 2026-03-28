@@ -3,7 +3,7 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { Github, Mail, User, Building2, Phone, Briefcase, ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
+import { Github, Mail, User, Building2, Phone, Briefcase, ArrowLeft, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -24,6 +24,7 @@ export default function SignupPage() {
     fullname: "",
     email: "",
     password: "",
+    confirmPassword: "",
     company: "",
     role: "",
     phone: "",
@@ -32,6 +33,8 @@ export default function SignupPage() {
     dobYear: "",
     compliance: false,
   })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i)
 
@@ -46,9 +49,18 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (formDataState.password !== formDataState.confirmPassword) {
+      toast({ variant: "destructive", title: "Error", description: "Passwords do not match." })
+      return
+    }
+
     setLoading(true)
 
-    const formData = new FormData(e.target as HTMLFormElement)
+    const formData = new FormData()
+    Object.entries(formDataState).forEach(([key, value]) => {
+      formData.append(key, value as string)
+    })
 
     try {
       const res = await registerUser(formData)
@@ -228,8 +240,23 @@ export default function SignupPage() {
                     <div className="space-y-6">
                         <div className="grid gap-2">
                             <Label htmlFor="password">Password</Label>
-                            <Input id="password" name="password" type="password" value={formDataState.password} onChange={handleInputChange} required className="h-12" />
+                            <div className="relative">
+                                <Input id="password" name="password" type={showPassword ? "text" : "password"} value={formDataState.password} onChange={handleInputChange} required className="h-12 pr-10" />
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                            </div>
                             <p className="text-[10px] text-muted-foreground">Encryption level: Argon2id (Master Cluster standard).</p>
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="confirmPassword">Confirm Password</Label>
+                            <div className="relative">
+                                <Input id="confirmPassword" name="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={formDataState.confirmPassword} onChange={handleInputChange} required className="h-12 pr-10" />
+                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                            </div>
                         </div>
 
                         <div className="flex items-start gap-3 p-4 bg-primary/5 rounded-xl border border-primary/20">

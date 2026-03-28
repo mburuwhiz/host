@@ -29,6 +29,34 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
   }
 };
 
+export const sendLoginNotificationEmail = async (email: string) => {
+  return sendEmail(
+    email,
+    'New Login to TWOEM Cluster',
+    `
+      <div style="font-family: monospace; max-width: 600px; margin: 0 auto;">
+        <h2>Login Detected</h2>
+        <p>A new login was just detected for your account.</p>
+        <p>If this was not you, please secure your account immediately.</p>
+      </div>
+    `
+  );
+};
+
+export const sendSignupSuccessEmail = async (email: string) => {
+  return sendEmail(
+    email,
+    'Welcome to TWOEM',
+    `
+      <div style="font-family: monospace; max-width: 600px; margin: 0 auto;">
+        <h2>Welcome to TWOEM!</h2>
+        <p>Your account has been successfully created.</p>
+        <p>Please make sure to verify your email to access all features.</p>
+      </div>
+    `
+  );
+};
+
 export const sendVerificationEmail = async (email: string, token: string) => {
   const domain = process.env.AUTH_URL || 'http://localhost:3000';
   const verificationLink = `${domain}/verify-email?token=${token}`;

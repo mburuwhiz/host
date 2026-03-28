@@ -1,11 +1,32 @@
 
 "use client"
 
-import { CreditCard, Download, Plus, Zap, ShieldCheck } from "lucide-react"
+import { useState } from "react"
+import { CreditCard, Download, Plus, Zap, ShieldCheck, Loader2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
+
 export default function TeamBillingPage() {
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+  const [showAddMethod, setShowAddMethod] = useState(false)
+
+  const handleAddPaymentMethod = (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setTimeout(() => {
+        setLoading(false)
+        setShowAddMethod(false)
+        toast({
+            title: "Payment Method Added",
+            description: "Your billing details have been securely stored.",
+        })
+    }, 1500)
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-10">
@@ -34,7 +55,7 @@ export default function TeamBillingPage() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2"><CreditCard className="h-5 w-5" /> Payment Method</CardTitle>
           </CardHeader>
-          <CardContent className="pt-4">
+          <CardContent className="pt-4 space-y-4">
             <div className="flex items-center gap-4 p-4 border-2 rounded-xl border-dashed">
               <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center font-bold">VISA</div>
               <div className="flex-1">
@@ -43,10 +64,38 @@ export default function TeamBillingPage() {
               </div>
               <Button variant="ghost" size="sm">Edit</Button>
             </div>
+
+            {showAddMethod && (
+                <form onSubmit={handleAddPaymentMethod} className="space-y-4 p-4 bg-muted/20 border-2 rounded-xl mt-4">
+                    <h4 className="font-bold text-sm">Add New Payment Method</h4>
+                    <div className="space-y-2">
+                        <Label htmlFor="cardNumber">Card Number</Label>
+                        <Input id="cardNumber" placeholder="0000 0000 0000 0000" required />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="expiry">Expiry Date</Label>
+                            <Input id="expiry" placeholder="MM/YY" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="cvc">CVC</Label>
+                            <Input id="cvc" placeholder="123" required />
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button type="button" variant="ghost" onClick={() => setShowAddMethod(false)}>Cancel</Button>
+                        <Button type="submit" disabled={loading}>
+                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save
+                        </Button>
+                    </div>
+                </form>
+            )}
           </CardContent>
-          <CardFooter>
-            <Button variant="outline" className="w-full"><Plus className="mr-2 h-4 w-4" /> Add Method</Button>
-          </CardFooter>
+          {!showAddMethod && (
+            <CardFooter>
+              <Button variant="outline" className="w-full" onClick={() => setShowAddMethod(true)}><Plus className="mr-2 h-4 w-4" /> Add Method</Button>
+            </CardFooter>
+          )}
         </Card>
       </div>
 

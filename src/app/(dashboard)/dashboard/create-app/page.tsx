@@ -166,6 +166,19 @@ export default function CreateAppPage() {
             </div>
 
             <div className="space-y-3">
+              <Label className="font-bold">Git Repository URL</Label>
+              <div className="flex gap-2">
+                <div className="flex items-center justify-center bg-muted border rounded-md px-3">
+                    <Github className="h-5 w-5" />
+                </div>
+                <Input id="repoUrl" placeholder="https://github.com/username/repo" className="h-12 bg-white" required />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                The public repository URL for this web service.
+              </p>
+            </div>
+
+            <div className="space-y-3">
               <Label className="font-bold">Region</Label>
               <Select defaultValue="us-west">
                 <SelectTrigger className="h-12 bg-white w-full md:w-1/2">

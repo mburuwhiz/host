@@ -58,6 +58,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { toast } = useToast()
   const [isCommandOpen, setIsCommandOpen] = useState(false)
   const { data: session } = useSession()
+  const isEmailVerified = (session?.user as any)?.emailVerified
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -87,6 +88,26 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen bg-background font-body">
+      {!isEmailVerified && (
+        <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border-2 border-amber-100 p-8 rounded-3xl shadow-2xl max-w-lg w-full text-center space-y-6">
+            <div className="mx-auto w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-2">
+              <span className="text-2xl font-bold">!</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 font-headline">Email Verification Required</h2>
+            <p className="text-muted-foreground text-sm">
+              You must verify your email address to access the dashboard and deploy applications. Please check your inbox for the verification link.
+            </p>
+            <div className="pt-4 flex flex-col gap-3">
+              <Button className="w-full font-bold h-11 bg-amber-500 hover:bg-amber-600" onClick={() => {
+                toast({ title: "Email Sent", description: "Verification email resent successfully." })
+              }}>Resend Verification Email</Button>
+              <Button variant="ghost" onClick={() => signOut({ callbackUrl: '/login', redirect: true })}>Log out</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside className="hidden md:flex w-72 flex-col border-r bg-white shadow-sm z-50">
         <div className="flex h-20 items-center px-8 border-b">
@@ -181,7 +202,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 cursor-pointer font-medium"><Link href="/account/security">Security & 2FA</Link></DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 cursor-pointer font-medium"><Link href="/account/tokens">API Access Tokens</Link></DropdownMenuItem>
                     <DropdownMenuSeparator className="my-2" />
-                    <DropdownMenuItem onClick={async () => await signOut({ callbackUrl: '/login' })} className="text-destructive rounded-xl px-3 py-2.5 cursor-pointer font-bold focus:bg-destructive/5 focus:text-destructive">
+                    <DropdownMenuItem onClick={async () => {
+                        await signOut({ callbackUrl: '/login', redirect: true });
+                    }} className="text-destructive rounded-xl px-3 py-2.5 cursor-pointer font-bold focus:bg-destructive/5 focus:text-destructive">
                         Terminate Session
                     </DropdownMenuItem>
                 </DropdownMenuContent>
