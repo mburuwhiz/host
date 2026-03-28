@@ -107,7 +107,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!isPasswordValid) throw new Error("Invalid password")
 
         // Trigger login notification for credentials login
-        sendLoginNotificationEmail(user.email).catch(console.error)
+        if (user.email) {
+            sendLoginNotificationEmail(user.email).catch(console.error)
+        }
 
         return {
           id: user.id,

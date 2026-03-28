@@ -14,7 +14,8 @@ export async function POST(req: Request) {
     const token = randomBytes(32).toString('hex')
     const expires = new Date(new Date().getTime() + 24 * 60 * 60 * 1000)
 
-    // Delete existing tokens for this email
+    // Create a new verification token first, replacing is safer this way or by unique constraint.
+    // However Prisma requires identifier for VerificationToken. Let's delete old ones.
     await prisma.verificationToken.deleteMany({
       where: { identifier: session.user.email }
     })
