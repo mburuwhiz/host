@@ -9,10 +9,13 @@ import type { NextRequest } from "next/server"
 const { auth } = NextAuth({
   providers: [],
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, account }) {
       if (user) {
         token.role = (user as any).role
         token.emailVerified = (user as any).emailVerified
+        if (account && account.provider !== "credentials") {
+            token.emailVerified = new Date().toISOString()
+        }
       }
       return token
     },
