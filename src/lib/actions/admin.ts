@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db/prisma"
 import { auth } from "@/auth"
 import { sendAccountDeletedEmail } from "@/lib/email"
+import { destroyAppResources } from "@/lib/orchestration/engine"
 
 async function verifySuperAdmin() {
     const session = await auth();
@@ -28,11 +29,36 @@ export async function updateUserRole(userId: string, newRole: string) {
 export async function deleteUser(userId: string) {
     try {
         await verifySuperAdmin();
-        const user = await prisma.user.findUnique({ where: { id: userId } });
+        // Get user and their associated apps (via memberships) before deletion for cascade teardown
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                memberships: {
+                    include: {
+                        team: {
+                            include: { apps: true }
+                        }
+                    }
+                }
+            }
+        });
+
         if (user) {
+            // Initiate container/cloud proxy cleanup for all apps owned by the user's teams
+            for (const membership of user.memberships) {
+                if (membership.role === 'Owner') {
+                    for (const app of membership.team.apps) {
+                        // This removes Docker containers, volumes, and Nginx/Cloudflare reverse proxy configs natively.
+                        destroyAppResources(app.name).catch(console.error);
+                    }
+                }
+            }
+
+            // Delete database row (Cascade deletion will wipe apps, env vars, deployments, tokens, etc)
             await prisma.user.delete({
                 where: { id: userId }
             });
+
             if (user.email) {
                 sendAccountDeletedEmail(user.email).catch(console.error);
             }
