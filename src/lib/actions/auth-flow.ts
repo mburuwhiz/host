@@ -15,17 +15,16 @@ export async function requestPasswordReset(email: string) {
         const token = randomBytes(32).toString('hex')
         const expires = new Date(new Date().getTime() + 1 * 60 * 60 * 1000) // 1 hour
 
-        // Create token, if one exists, deleting it might fail or pass, it's safer to just let Prisma handle it
-        // or just use Prisma upsert/create correctly if ID is an issue. Since email and token are unique:
-        try {
-            await prisma.passwordResetToken.deleteMany({ where: { email } })
-        } catch (e) {
-            console.log("Could not delete existing tokens, proceeding to create...")
-        }
+        // To absolutely avoid any Prisma Client schema definition caching errors on the user's end
+        // for the `PasswordResetToken` model, we will securely repurpose the built-in `VerificationToken` model
+        // which is guaranteed to exist. We distinguish reset tokens by prefixing the identifier.
+        const resetIdentifier = `RESET_${email}`
 
-        await prisma.passwordResetToken.create({
+        await prisma.verificationToken.deleteMany({ where: { identifier: resetIdentifier } })
+
+        await prisma.verificationToken.create({
             data: {
-                email,
+                identifier: resetIdentifier,
                 token,
                 expires
             }
@@ -42,23 +41,29 @@ export async function requestPasswordReset(email: string) {
 
 export async function resetPassword(token: string, password: string) {
     try {
-        const resetToken = await prisma.passwordResetToken.findUnique({ where: { token } })
+        const resetToken = await prisma.verificationToken.findFirst({
+            where: {
+                token,
+                identifier: { startsWith: 'RESET_' }
+            }
+        })
 
         if (!resetToken) return { success: false, error: "Invalid or missing token" }
 
         if (new Date() > resetToken.expires) {
-            await prisma.passwordResetToken.delete({ where: { token } })
+            await prisma.verificationToken.delete({ where: { identifier_token: { identifier: resetToken.identifier, token } } })
             return { success: false, error: "Token expired" }
         }
 
         const passwordHash = await argon2.hash(password)
+        const email = resetToken.identifier.replace('RESET_', '')
 
         await prisma.user.update({
-            where: { email: resetToken.email },
+            where: { email },
             data: { passwordHash }
         })
 
-        await prisma.passwordResetToken.delete({ where: { token } })
+        await prisma.verificationToken.delete({ where: { identifier_token: { identifier: resetToken.identifier, token } } })
 
         return { success: true }
     } catch (e) {
