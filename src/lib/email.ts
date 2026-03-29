@@ -57,6 +57,20 @@ export const sendSignupSuccessEmail = async (email: string) => {
   );
 };
 
+export const sendAccountDeletedEmail = async (email: string) => {
+  return sendEmail(
+    email,
+    'Account Permanently Deleted',
+    `
+      <div style="font-family: monospace; max-width: 600px; margin: 0 auto;">
+        <h2>Account Deletion</h2>
+        <p>Your TWOEM operator account has been permanently deleted by an administrator.</p>
+        <p>If you believe this was an error, please contact support immediately.</p>
+      </div>
+    `
+  );
+};
+
 export const sendVerificationEmail = async (email: string, token: string) => {
   const domain = process.env.AUTH_URL || 'http://localhost:3000';
   const verificationLink = `${domain}/login?verifyToken=${token}&email=${encodeURIComponent(email)}`;

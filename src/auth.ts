@@ -28,6 +28,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     GitHubProvider({
       clientId: process.env.GITHUB_ID as string,
       clientSecret: process.env.GITHUB_SECRET as string,
+      allowDangerousEmailAccountLinking: true,
     }),
     GoogleProvider({
       clientId: process.env.GOOGLE_ID as string,
@@ -141,6 +142,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         console.log("Login - Google Success")
+      }
+
+      // Trigger login notification for OAuth logins (credentials is handled in authorize)
+      if (account?.provider !== "credentials" && user?.email) {
+        sendLoginNotificationEmail(user.email).catch(console.error)
       }
 
       // Auto-verify email on first OAuth login, since providers like Google/Github already verify

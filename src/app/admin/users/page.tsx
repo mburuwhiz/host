@@ -47,12 +47,16 @@ export default function AdminUserManagement() {
     })
   }
 
-  const handleDeleteUser = (userId: string) => {
-    if (!confirm("Are you sure you want to permanently delete this operator?")) return;
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<string | null>(null)
+
+  const handleDeleteUser = () => {
+    if (!userToDelete) return;
     startTransition(async () => {
-        const res = await deleteUser(userId);
+        const res = await deleteUser(userToDelete);
         if (res.success) {
             toast({ title: "Success", description: "Operator deleted successfully." });
+            setDeleteConfirmOpen(false)
             fetchUsers();
         } else {
             toast({ variant: "destructive", title: "Error", description: res.error });
@@ -171,7 +175,10 @@ export default function AdminUserManagement() {
                             <DropdownMenuItem className="rounded-xl font-bold p-3">View Full Audit Log</DropdownMenuItem>
                             <DropdownMenuItem className="rounded-xl font-bold p-3">Impersonate Session</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive font-bold rounded-xl p-3 focus:bg-destructive/5 focus:text-destructive" onClick={() => handleDeleteUser(u.id)}>Delete Operator</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive font-bold rounded-xl p-3 focus:bg-destructive/5 focus:text-destructive" onClick={() => {
+                                setUserToDelete(u.id)
+                                setDeleteConfirmOpen(true)
+                            }}>Delete Operator</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -181,6 +188,27 @@ export default function AdminUserManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {deleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white border-2 border-red-100 p-8 rounded-[2rem] shadow-2xl max-w-md w-full text-center space-y-6">
+                <div className="mx-auto w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-2 border border-red-100">
+                    <ShieldAlert className="h-8 w-8" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 font-headline">Delete Operator Account?</h2>
+                <p className="text-muted-foreground text-sm">
+                    This action cannot be undone. This will permanently delete the operator's account, remove their data from our servers, and revoke all cluster access.
+                </p>
+                <div className="pt-4 flex gap-3">
+                    <Button variant="outline" className="flex-1 font-bold h-11" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+                    <Button variant="destructive" className="flex-1 font-bold h-11" onClick={handleDeleteUser} disabled={isPending}>
+                        {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                        Delete Account
+                    </Button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   )
 }
